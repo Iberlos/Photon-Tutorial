@@ -49,12 +49,58 @@ namespace Photon.Pun.Demo.PunBasics
         private GameObject player2;
 
         // Start Method
-      
+        private void Start()
+        {
+            /*1. Check whether the client is connected to the Photon Network or not. 
+             In case there are some issues with the network, then the Launcher scene should get loaded so that the client can try to connect again.*/
+            if (!PhotonNetwork.IsConnected)
+            {
+                SceneManager.LoadScene("Launcher");
+                return;
+            }
+            /*2. Get a reference to the local Player (the player that is controlling the client), and check whether it is the Master client.*/
+            if (PlayerManager.LocalPlayerInstance == null)
+            {
+                if(PhotonNetwork.IsMasterClient)
+                {
+                    Debug.Log("Instantiating Player 1.");
+                    /*3. If it is, Instantiate the Player GameObject from the Resources folder (which you will do in the next step) using the PhotonNetwork.Instantiate, and save a reference to it in the player1 GameObject.*/
+                    player1 = PhotonNetwork.Instantiate("Car", player1SpawnPosition.transform.position, player1SpawnPosition.transform.rotation, 0);
+                    /*4. Similarly, Instantiate the Ball GameObject so that it’s the same Ball GameObject that’s loaded on all clients connected to the current room.*/
+                    ball = PhotonNetwork.Instantiate("Ball", ballSpawnTransform.transform.position, ballSpawnTransform.transform.rotation, 0);
+                    ball.name = "Ball";
+                }
+                else
+                {
+                    player2 = PhotonNetwork.Instantiate("Car", player2SpawnPosition.transform.position, player2SpawnPosition.transform.rotation, 0);
+                }
+            }
+        }
+
         // Update Method
+        private void Update()
+        {
+            if(Input.GetKeyDown(KeyCode.Escape))
+            {
+                Application.Quit();
+            }
+        }
 
         // Photon Methods
+        public override void OnPlayerLeftRoom(Player otherPlayer)
+        {
+            Debug.Log("OnPlayerLeftRoom() " + otherPlayer.NickName);
+            if(PhotonNetwork.IsMasterClient)
+            {
+                PhotonNetwork.LoadLevel("Launcher");
+            }
+        }
 
         //Helper Methods
+        public void QuitRoom()
+        {
+            Application.Quit();
+        }
 
     }
 }
